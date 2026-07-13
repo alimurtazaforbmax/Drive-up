@@ -1,0 +1,36 @@
+# Virtual environment
+venv/
+.venv/
+.venv-*/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Secrets & tokens (never commit)
+credentials/client_secret.json
+credentials/*.json
+!credentials/.gitkeep
+token.json
+*.pickle
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local config overrides
+*.local
+.env
+.env.*
