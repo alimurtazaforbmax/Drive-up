@@ -92,3 +92,9 @@ jobs:
           mkdir -p dist/installers
           tar -C dist -czf dist/installers/DriveUp-1.0.0-linux-x86_64-ubuntu22.04.tar.gz DriveUp
           ./scripts/package_linux_deb.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/installers/*
+          if-no-files-found: error
