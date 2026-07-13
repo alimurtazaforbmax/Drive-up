@@ -16,6 +16,7 @@ echo "==> Cleaning previous build"
 rm -rf dist/DriveUp dist/DriveUp.app build/DriveUp
 
 echo "==> Running PyInstaller"
+export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-13.0}"
 "$PYTHON" -m PyInstaller --noconfirm --clean driveup.spec
 
 if [[ -d dist/DriveUp.app ]]; then

@@ -17,10 +17,14 @@ jobs:
         include:
           - os: windows-latest
             artifact: DriveUp-Windows
+          # Intel Macs (e.g. 2017 MacBook Pro). macos-latest is Apple Silicon only.
+          - os: macos-15-intel
+            artifact: DriveUp-macOS-Intel
           - os: macos-latest
-            artifact: DriveUp-macOS
-          - os: ubuntu-latest
-            artifact: DriveUp-Linux
+            artifact: DriveUp-macOS-AppleSilicon
+          # Ubuntu 22.04 = glibc compatible with 22.04 desktops
+          - os: ubuntu-22.04
+            artifact: DriveUp-Linux-Ubuntu-22.04
 
     runs-on: ${{ matrix.os }}
 
@@ -31,12 +35,34 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install Linux system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1 \
+            libglib2.0-0 \
+            libxkbcommon0 \
+            libdbus-1-3 \
+            libxcb-cursor0 \
+            libxcb-xinerama0 \
+            libfontconfig1 \
+            libx11-xcb1
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-build.txt
 
+      - name: Build with PyInstaller (macOS)
+        if: runner.os == 'macOS'
+        env:
+          # Allow the app to run on macOS Ventura 13+ (not only the builder OS).
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
+        run: python -m PyInstaller --noconfirm --clean driveup.spec
+
       - name: Build with PyInstaller
+        if: runner.os != 'macOS'
         run: python -m PyInstaller --noconfirm --clean driveup.spec
 
       - name: Package Windows zip
@@ -50,19 +76,19 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           mkdir -p dist/installers
+          ARCH_LABEL="${{ matrix.artifact }}"
           if [ -d dist/DriveUp.app ]; then
-            ditto -c -k --sequesterRsrc --keepParent dist/DriveUp.app dist/installers/DriveUp-macOS.zip
+            ditto -c -k --sequesterRsrc --keepParent dist/DriveUp.app "dist/installers/${ARCH_LABEL}.zip"
+            # Show binary arch in logs for debugging
+            file dist/DriveUp.app/Contents/MacOS/DriveUp || true
           else
-            ditto -c -k --sequesterRsrc --keepParent dist/DriveUp dist/installers/DriveUp-macOS.zip
+            ditto -c -k --sequesterRsrc --keepParent dist/DriveUp "dist/installers/${ARCH_LABEL}.zip"
           fi
 
-      - name: Package Linux
+      - name: Package Linux (tar.gz + .deb for Ubuntu 22.04)
         if: runner.os == 'Linux'
         run: |
+          chmod +x scripts/build_linux.sh scripts/package_linux_deb.sh
           mkdir -p dist/installers
-          tar -C dist -czf dist/installers/DriveUp-Linux.tar.gz DriveUp
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: dist/installers/*
+          tar -C dist -czf dist/installers/DriveUp-1.0.0-linux-x86_64-ubuntu22.04.tar.gz DriveUp
+          ./scripts/package_linux_deb.sh

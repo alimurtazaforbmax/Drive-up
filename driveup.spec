@@ -98,6 +98,8 @@ if sys.platform == "darwin":
             "CFBundleDisplayName": "DriveUp",
             "CFBundleShortVersionString": "1.0.0",
             "NSHighResolutionCapable": True,
+            # Matches Intel 2017+ Macs on Ventura; CI sets MACOSX_DEPLOYMENT_TARGET=13.0
+            "LSMinimumSystemVersion": "13.0",
         },
     }
     if icns.is_file():

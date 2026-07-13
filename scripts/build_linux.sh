@@ -30,12 +30,9 @@ if [[ ! -x dist/DriveUp/DriveUp ]]; then
 fi
 
 mkdir -p dist/installers
-ARCHIVE="dist/installers/DriveUp-1.0.0-linux-x86_64.tar.gz"
+ARCHIVE="dist/installers/DriveUp-1.0.0-linux-x86_64-ubuntu22.04.tar.gz"
 tar -C dist -czf "$ARCHIVE" DriveUp
 
-echo "==> Linux build ready: dist/DriveUp"
-echo "    Archive: $ARCHIVE"
-echo "    Optional AppImage: use appimagetool with a DriveUp.AppDir wrapping dist/DriveUp"
 cat > dist/DriveUp/DriveUp.desktop <<'EOF'
 [Desktop Entry]
 Type=Application
@@ -46,3 +43,12 @@ Icon=driveup
 Terminal=false
 Categories=Utility;Network;
 EOF
+
+echo "==> Linux build ready: dist/DriveUp"
+echo "    Archive: $ARCHIVE"
+
+if command -v dpkg-deb >/dev/null 2>&1; then
+  bash "${ROOT}/scripts/package_linux_deb.sh"
+else
+  echo "    Tip: install dpkg-deb to also produce a .deb for Ubuntu 22.04"
+fi
